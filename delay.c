@@ -1,4 +1,4 @@
-																						   #include<lpc21xx.h>
+#include<lpc21xx.h>
 
 #include"header.h"
 
@@ -23,6 +23,5 @@ void delay_ms(u32 ms)
 	T0TCR=0;
 
 }
-
 
 

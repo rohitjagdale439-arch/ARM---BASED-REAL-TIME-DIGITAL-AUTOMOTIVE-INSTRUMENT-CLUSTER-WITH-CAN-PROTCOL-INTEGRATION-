@@ -1,10 +1,10 @@
- #include<lpc21xx.h>
+#include<lpc21xx.h>
 
 #include"header.h"
 
-extern u32 RECEIVER_FLAG;  
+//extern u32 RECEIVER_FLAG;
 
-extern CAN2_ST M1;
+extern CAN2 M1;
 
 void can2_init(void)
 
@@ -24,51 +24,17 @@ void can2_init(void)
 
 }
 
-
-
-
-void CAN2_RX_HANDLER(void)__irq
-
-{
-
-	RECEIVER_FLAG=1;
-
-	M1.ID=C2RID;
-
-	M1.DLC=((C2RFS>>16)&0XF);
-
-	M1.RTR=((C2RFS>>16)&1);
-
-	if(M1.RTR==0)
-
-	{
-
-		M1.BYTEA=C2RDA;
-
-		M1.BYTEB=C2RDB;
-
-	}
-
-	C2CMR=(1<<2);
-
-	VICVectAddr=0;
-
-}
-
-void EN_CAN2_INTERRUPT(void)
-
-{
-
-	C2IER=0X01;
-
-	VICIntSelect=0;
-
-	VICVectAddr0=(u32)CAN2_RX_HANDLER;
-
-	VICVectCntl0=27|(1<<5);
-
-	VICIntEnable=(1<<27);
-
+#define TCS ((C2GSR>>3)&1)
+void can2_tx(CAN2 V){
+	C2TID1 = V.ID;
+	C2TFI1 = (V.DLC<<16);
+	if(V.RTR==0){
+		C2TDA1=V.BYTEA;
+		C2TDB1=V.BYTEB;
+	}else
+		C2TFI1 |= (1<<30);
+	C2CMR = 1|(1<<5);
+	while(TCS==0);
 }
 
 

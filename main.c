@@ -1,234 +1,168 @@
+	#include<lpc21xx.h>
+
 #include"header.h"
 
-#include <lpc21xx.h>
+CAN2 M1;
 
-CAN2_ST M1;
+int FLAG_HEADLIGHT;
 
-#define LED1 (1<<17)
+int FLAG_INDICATOR_RIGHT;
 
-#define LED2 (1<<18)
+int FLAG_INDICATOR_LEFT;
 
-#define LED3 (1<<19)
-
-
-
-u32 RECEIVER_FLAG;
 
 int main()
 
 {
 
-        float temp,result;
+	int HEADLIGHT_TOGGLE=1;
 
-        u32 spd;
+	int INDICATOR_RIGHT_TOGGLE=1;
 
-        unsigned char flag1=0,flag2=0;
+	int INDICATOR_LEFT_TOGGLE=1;
 
-        IODIR0|=LED1|LED2|LED3;
-				
-		IOCLR0 = LED1|LED2|LED3;
+	adc_init();
+
+	can2_init();
+
+	ext_init();
+
+	interrupt_confg();
+		M1.DLC=4;
+		M1.FF = M1.RTR = 0;
+
+	while(1)
+
+	{
+
+		M1.ID=TEMPERATURE_ID;
+
 	
-        IOSET0|=LED1|LED2|LED3;
 
-        lcd_init();
+		M1.BYTEA=adc_read(1);
 
-        can2_init();
+		can2_tx(M1);
 
-        EN_CAN2_INTERRUPT();
 
-        lcd_cgram();
+		delay_ms(100);		
 
-        lcd_cmd(0x80);
+		M1.ID=SPEED_ID;		
 
-        lcd_string("SPD:");
+		M1.BYTEA=adc_read(2);	
 
-        lcd_cmd(0x88);
+		can2_tx(M1);
 
-        lcd_string("TEMP:");
+		delay_ms(100);
 
-        lcd_cmd(0xC7);
 
-        lcd_data(3);
+		if(FLAG_HEADLIGHT)
 
-        while(1)   //The infinite while(1) loop constantly checks for new CAN data.
+		{
 
-        {
+		 	FLAG_HEADLIGHT=0;
 
-                if(RECEIVER_FLAG)
+			M1.ID=HEADLIGHT_ID;
 
-                {
+			if(HEADLIGHT_TOGGLE)
 
-                        RECEIVER_FLAG=0;
+			{
 
-                    if(M1.ID==TEMPERATURE_ID)
+				M1.BYTEA=HEADLIGHT_ON;
 
-                        {
+				HEADLIGHT_TOGGLE=0;		
 
-                                lcd_cmd(0x8D);
+			}
 
-                                temp=(M1.BYTEA*3.3)/1023;
+			else
 
-                                result=(temp-0.5)/0.01;
+			{
 
-                                lcd_data(((int)result/100)+48);
+				M1.BYTEA=HEADLIGHT_OFF;
 
-                                lcd_data((((int)result/10)%10)+48);
+				HEADLIGHT_TOGGLE=1;		
 
-                                lcd_data(((int)result%10)+48);
+			}	
 
-                        }
+			can2_tx(M1);
 
-                        if(M1.ID==SPEED_ID)
+		}
 
-                        {
+	  // delay_ms(2000);
 
-                                lcd_cmd(0x84);
+		if(FLAG_INDICATOR_RIGHT)
 
-                                spd=(M1.BYTEA*280)/1023;
+		{
 
-                                lcd_data((spd/100)+48);
+			FLAG_INDICATOR_RIGHT=0;
 
-                                lcd_data(((spd/10)%10)+48);
+	   		M1.ID=INDICATOR_ID;
 
-                                lcd_data((spd%10)+48);
+			//C2TFI1=4<<16;
 
-                        }
+	   		if(INDICATOR_RIGHT_TOGGLE)
 
-                        if(M1.ID==HEADLIGHT_ID)
+			{
 
-                        {
+				M1.BYTEA=INDICATOR_RIGHT_ON;
 
-                                if(M1.BYTEA==HEADLIGHT_ON)
+				INDICATOR_RIGHT_TOGGLE=0;
 
-                                {
+				INDICATOR_LEFT_TOGGLE=1;		
 
-                                        lcd_cmd(0xC8);
+			}
 
-                                    	lcd_data(4);
+			else
 
-                                        IOCLR0=LED2;
+			{
 
-                                }
+				M1.BYTEA=INDICATOR_RIGHT_OFF;
 
-                                if(M1.BYTEA==HEADLIGHT_OFF)
+				INDICATOR_RIGHT_TOGGLE=1;		
 
-                                {
+			}	
 
-                                    lcd_cmd(0xC8);
+			//C2CMR=0x21;
+			can2_tx(M1);
+		}
 
-                                    lcd_data(' ');
+	   //delay_ms(2000);
 
-                                        IOSET0=LED2;
+	   if(FLAG_INDICATOR_LEFT)
 
-                                }
+		{
 
-                        }
+	   		FLAG_INDICATOR_LEFT=0;
 
-                        if(M1.ID==INDICATOR_ID)
+	   		M1.ID=INDICATOR_ID;
 
-                        {
+			//M2.BYTEA=4<<16;
 
-                                if(M1.BYTEA==INDICATOR_RIGHT_ON)
+	   		if(INDICATOR_LEFT_TOGGLE)
 
-                                {
+			{
 
-                                        lcd_cmd(0xC1);
+				M1.BYTEA=INDICATOR_LEFT_ON;
 
-                                        lcd_data(' ');
+				INDICATOR_LEFT_TOGGLE=0;
 
-                                        lcd_data(' ');
+				INDICATOR_RIGHT_TOGGLE=1;		
 
-                                        lcd_cmd(0xCD);
+			}
 
-                                    	lcd_data(0);
+			else
 
-                                        lcd_data(1);
-										 IOCLR0=LED3;
+			{
 
-                                     //   flag2=1;
-                                }
+				M1.BYTEA=INDICATOR_LEFT_OFF;
 
-                                else if(M1.BYTEA==INDICATOR_LEFT_ON)
+				INDICATOR_LEFT_TOGGLE=1;		
 
-                                {
+			}	
 
-                                        lcd_cmd(0xC1);
+			//C2CMR=0x21;
+			can2_tx(M1);
+		}
 
-                                    	lcd_data(2);
-
-                                        lcd_data(0);
-
-                                        lcd_cmd(0xCD);
-
-                                        lcd_data(' ');
-
-                                        lcd_data(' ');
-
-									    IOCLR0=LED1;
-
-                                        flag1=1;
-
-                                }
-
-                                else if(M1.BYTEA==INDICATOR_RIGHT_OFF)
-
-                                {
-
-                                        lcd_cmd(0xCD);
-
-                                    	lcd_data(' ');
-
-                                        lcd_data(' ');
-
-                                        IOSET0=LED3;
-												   // IOCLR0=LED2;
-
-                                        flag2=0;
-
-                                }
-
-                                else if(M1.BYTEA==INDICATOR_LEFT_OFF)
-
-                                {
-
-                                        lcd_cmd(0xC1);
-
-                                    	lcd_data(' ');
-
-                                        lcd_data(' ');
-
-                                        IOSET0=LED1;
-
-                                        flag1=0;
-
-                                }
-
-                        }
-
-            }
-
-               /*  if(flag1)
-                {
-                        IOCLR0=LED2;
-
-                        delay_ms(100);
-
-                        IOSET0=LED2;
-
-                        delay_ms(100);
-                }
-
-                if(flag2)
-                {
-                        IOCLR0=LED3;
-
-                        delay_ms(100);
-
-                        IOSET0=LED3;
-
-                        delay_ms(100);
-                }*/
-
-        }
+	}
 
 }

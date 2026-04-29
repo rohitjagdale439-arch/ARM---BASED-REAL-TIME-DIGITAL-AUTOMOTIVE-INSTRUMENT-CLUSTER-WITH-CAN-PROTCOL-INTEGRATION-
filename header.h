@@ -11,7 +11,7 @@ typedef unsigned char u8;
 typedef char s8;
 
 
-typedef struct CAM2_msg
+typedef struct CAN2_msg
 
 {
 
@@ -21,16 +21,14 @@ typedef struct CAM2_msg
 
 	u8 DLC;
 
+	u8 FF;
+
 	u32 BYTEA;
 
 	u32 BYTEB;
 
-} CAN2_ST;
+} CAN2;
 
-
-#define sw1 ((IOPIN0>>15)&1)
-
- 
 
 #define TEMPERATURE_ID 0x22
 
@@ -50,6 +48,7 @@ typedef struct CAM2_msg
 
 #define INDICATOR_ID 0xAF
 
+
 #define INDICATOR_RIGHT_ON 0xEE
 
 #define INDICATOR_RIGHT_OFF 0xFF
@@ -64,22 +63,25 @@ typedef struct CAM2_msg
 
 
 
-void lcd_data(s8);
+extern u16 adc_read(u8 ch_num);
 
-void lcd_init(void);
-
-void lcd_cmd(s8);
-
-void lcd_string(s8 *);
-
-void lcd_cgram(void);
+extern void adc_init(void);
 
 
-void delay_ms(u32);
+extern void delay_ms(u32);
+
+extern void delay_sec(u32);
 
 
 void can2_init(void);
 
 void EN_CAN2_INTERRUPT(void);
+
+void interrupt_confg(void);
+
+void ext_init(void);
+
+
+
 
 
