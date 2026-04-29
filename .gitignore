@@ -1,55 +1,64 @@
-# Prerequisites
-*.d
+# 🔒 .gitignore for Embedded C (Keil / ARM / LPC Projects)
 
-# Object files
+# Build files
+
 *.o
-*.ko
-*.obj
+*.d
+*.axf
 *.elf
-
-# Linker output
-*.ilk
+*.hex
+*.bin
 *.map
-*.exp
 
-# Precompiled Headers
-*.gch
-*.pch
+# Keil uVision files
 
-# Libraries
+*.uvoptx
+*.uvopt
+*.uvprojx
+*.uvproj
+*.uvguix.*
+*.uvgui.*
+
+# Debug / Output folders
+
+/Debug/
+/debug/
+/Release/
+/release/
+/Objects/
+/Listings/
+/Output/
+
+# Temporary files
+
+*.bak
+*.tmp
+*.log
+
+# OS generated files
+
+.DS_Store
+Thumbs.db
+
+# Editor files
+
+.vscode/
+.idea/
+
+# Backup files
+
+*~
+*.swp
+
+# CMSIS / Library compiled files
+
 *.lib
 *.a
-*.la
-*.lo
 
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
+# Flash / Programming tool outputs
 
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+*.lst
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Misc
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
-
-# debug information files
-*.dwo
+*.dep
